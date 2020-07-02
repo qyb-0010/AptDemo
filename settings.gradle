@@ -1,0 +1,5 @@
+include ':view_injector'
+include ':my_processor'
+include ':qyb_anno'
+include ':app'
+rootProject.name = "MyApt"
