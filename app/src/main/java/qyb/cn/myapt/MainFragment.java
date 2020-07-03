@@ -10,6 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import qyb.cn.myapt.food.Food;
+import qyb.cn.myapt.food.FoodFactory;
 import qyb.cn.qyb_anno.BindView;
 import qyb.cn.view_injector.ViewInjector;
 
@@ -29,6 +31,7 @@ public class MainFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         ViewInjector.inject(this, view);
 
-        tv.setText("inject view ok");
+        Food hamburger = new FoodFactory().create("hamburger");
+        tv.setText("inject view ok, with hamburger: " + hamburger.getPrice());
     }
 }

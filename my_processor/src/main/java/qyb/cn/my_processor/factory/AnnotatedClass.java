@@ -45,6 +45,10 @@ public class AnnotatedClass {
         return typeSimpleName;
     }
 
+    public String getTypeFullName() {
+        return typeFullName;
+    }
+
     public TypeElement getTypeElement() {
         return annotatedClassElement;
     }

@@ -56,7 +56,6 @@ public class MyProcessor extends AbstractProcessor {
     private boolean process = false;
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
-        System.out.println("process start----");
 //        if (process) {
 //            return false;
 //        }
@@ -73,9 +72,6 @@ public class MyProcessor extends AbstractProcessor {
             String className = typeElement.getQualifiedName().toString();
             String packageName = elementUtils.getPackageOf(element).getQualifiedName().toString();
             int resId = element.getAnnotation(BindView.class).value();
-
-            System.out.println("packageName: " + packageName + " className: " + className + " ,type: " + typeElement.getSimpleName()
-            + " va: " + variableElement.getKind());
 
             ProxyInfo info = proxyInfoMap.get(className);
             if (info == null) {
