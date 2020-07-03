@@ -1,4 +1,4 @@
-package qyb.cn.my_processor;
+package qyb.cn.my_processor.bindview;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;

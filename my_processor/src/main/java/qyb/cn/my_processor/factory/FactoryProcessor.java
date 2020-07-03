@@ -2,6 +2,7 @@ package qyb.cn.my_processor.factory;
 
 import com.google.auto.service.AutoService;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +27,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
+import qyb.cn.my_processor.exception.AnnotationException;
 import qyb.cn.qyb_anno.Factory;
 
 @AutoService(Processor.class)
@@ -38,9 +40,7 @@ public class FactoryProcessor extends AbstractProcessor {
     private Elements elementUtils;
     private Types typeUtils;
 
-    private boolean process = false;
-
-    private Map<String, AnnotatedClassGroup> map = new LinkedHashMap<>();
+    private Map<String, AnnotatedClassGroup> annotatedGroups = new LinkedHashMap<>();
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
@@ -53,82 +53,69 @@ public class FactoryProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
-        if (process) {
-            return true;
-        }
-        process = true;
-        Set<? extends Element> factoryElements = roundEnvironment.getElementsAnnotatedWith(Factory.class);
-        for (Element element: factoryElements) {
-            if (element.getKind() != ElementKind.CLASS) {
-                messager.printMessage(Diagnostic.Kind.ERROR,
-                        "factory注解必须注解在类上",
-                        element);
-                return true;
-            }
-            try {
+        try {
+            Set<? extends Element> factoryElements = roundEnvironment.getElementsAnnotatedWith(Factory.class);
+            for (Element element: factoryElements) {
+                if (element.getKind() != ElementKind.CLASS) {
+                    throw new AnnotationException(element, "注解只能用于类");
+                }
                 TypeElement typeElement = (TypeElement)element;
                 AnnotatedClass clzz = new AnnotatedClass(typeElement);
-                if (!isValid(clzz)) {
-                    return true;
+                if (isValid(clzz)) {
+                    AnnotatedClassGroup group = annotatedGroups.get(clzz.getTypeQualifedName());
+                    if (group == null) {
+                        group = new AnnotatedClassGroup(clzz.getTypeQualifedName());
+                        annotatedGroups.put(clzz.getTypeQualifedName(), group);
+                    }
+                    group.addAnnotatedClass(clzz);
                 }
-
-                AnnotatedClassGroup group = map.get(clzz.getTypeFullName());
-                if (group == null) {
-                    group = new AnnotatedClassGroup(clzz.getTypeFullName());
-                    map.put(clzz.getTypeFullName(), group);
-                }
-                group.addAnnotatedClass(clzz);
-            } catch (Exception e) {
-                System.out.println("excep11----" + e);
             }
-        }
-
-        try {
-            for (AnnotatedClassGroup group: map.values()) {
+            for (AnnotatedClassGroup group: annotatedGroups.values()) {
                 group.generateCode(elementUtils, filer);
             }
-        } catch (Exception e) {
-            System.out.println("generate code excep----" + e);
+            annotatedGroups.clear();
+        } catch (AnnotationException e) {
+            error(e);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
         return true;
     }
 
-    private boolean isValid(AnnotatedClass clzz) {
-        TypeElement typeElement = clzz.getTypeElement();
+    private boolean isValid(AnnotatedClass annotatedClass) throws AnnotationException {
+        TypeElement annotatedClassElement = annotatedClass.getTypeElement();
         //被注解的类必须为public
-        if (!typeElement.getModifiers().contains(Modifier.PUBLIC)) {
-            return false;
+        if (!annotatedClassElement.getModifiers().contains(Modifier.PUBLIC)) {
+            throw new AnnotationException(annotatedClassElement, "被注解的类必须为public");
         }
         //被注解的类不能是抽象类
-        if (typeElement.getModifiers().contains(Modifier.ABSTRACT)) {
-            return false;
+        if (annotatedClassElement.getModifiers().contains(Modifier.ABSTRACT)) {
+            throw new AnnotationException(annotatedClassElement, "被注解的类不能为抽象类");
         }
-        TypeElement superClzz = elementUtils.getTypeElement(clzz.getTypeFullName());
+        TypeElement superClass = elementUtils.getTypeElement(annotatedClass.getTypeQualifedName());
         // @Factory注解中，type指明的类是否为接口
-        if (superClzz.getKind() == ElementKind.INTERFACE) {
+        if (superClass.getKind() == ElementKind.INTERFACE) {
             //如果是接口，检查被注解的类是否实现了这个接口
-            if (!typeElement.getInterfaces().contains(superClzz.asType())) {
-                return false;
+            if (!annotatedClassElement.getInterfaces().contains(superClass.asType())) {
+                throw new AnnotationException(annotatedClassElement, "被注解的类必须继承type接口");
             }
         } else {
-            TypeElement currElement = typeElement;
+            TypeElement currElement = annotatedClassElement;
             //检查父类中是否有
             while (true) {
                 TypeMirror superClassType = currElement.getSuperclass();
                 //找到头也没找到
                 if (superClassType.getKind() == TypeKind.NONE) {
-                    return false;
+                    throw new AnnotationException(annotatedClassElement, "被注解的类必须继承或实现type接口");
                 }
                 //找到了
-                if (superClassType.toString().equals(clzz.getTypeFullName())) {
+                if (superClassType.toString().equals(annotatedClass.getTypeQualifedName())) {
                     break;
                 }
-
                 currElement = (TypeElement) typeUtils.asElement(superClassType);
             }
         }
-        for (Element e: typeElement.getEnclosedElements()) {
+        for (Element e: annotatedClassElement.getEnclosedElements()) {
             if (e.getKind() == ElementKind.CONSTRUCTOR) {
                 ExecutableElement cons = (ExecutableElement)e;
                 if (cons.getParameters().size() == 0 && cons.getModifiers().contains(Modifier.PUBLIC)) {
@@ -136,6 +123,10 @@ public class FactoryProcessor extends AbstractProcessor {
                 }
             }
         }
-        return false;
+        throw new AnnotationException(annotatedClassElement, "被注解的类必须有一个无参的构造函数");
+    }
+
+    public void error(AnnotationException e) {
+        messager.printMessage(Diagnostic.Kind.ERROR, e.getMessage(), e.element);
     }
 }

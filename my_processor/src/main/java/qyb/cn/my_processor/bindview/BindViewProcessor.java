@@ -1,9 +1,7 @@
-package qyb.cn.my_processor;
+package qyb.cn.my_processor.bindview;
 
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeSpec;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,8 +17,6 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
@@ -30,7 +26,7 @@ import qyb.cn.qyb_anno.BindView;
 @AutoService(Processor.class)
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 @SupportedAnnotationTypes({"qyb.cn.qyb_anno.MyTest", "qyb.cn.qyb_anno.BindView"})
-public class MyProcessor extends AbstractProcessor {
+public class BindViewProcessor extends AbstractProcessor {
 
     /**
      * 生成文件的工具类
@@ -56,11 +52,6 @@ public class MyProcessor extends AbstractProcessor {
     private boolean process = false;
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
-//        if (process) {
-//            return false;
-//        }
-//        process = true;
-
         Set<? extends Element> elements = roundEnvironment.getElementsAnnotatedWith(BindView.class);
         if (elements == null || elements.size() < 1) {
             return true;

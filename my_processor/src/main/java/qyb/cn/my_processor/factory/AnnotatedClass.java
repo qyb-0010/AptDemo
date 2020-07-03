@@ -8,7 +8,7 @@ import qyb.cn.qyb_anno.Factory;
 
 public class AnnotatedClass {
     private TypeElement annotatedClassElement;
-    private String typeFullName;
+    private String typeQualifiedName;
     private String typeSimpleName;
     private String id;
 
@@ -21,12 +21,12 @@ public class AnnotatedClass {
         }
         try {
             Class<?> type = factory.type();
-            typeFullName = type.getCanonicalName();
+            typeQualifiedName = type.getCanonicalName();
             typeSimpleName = type.getSimpleName();
         } catch (MirroredTypeException e) {
             DeclaredType declaredType = (DeclaredType) e.getTypeMirror();
             TypeElement typeElement = (TypeElement) declaredType.asElement();
-            typeFullName = typeElement.getQualifiedName().toString();
+            typeQualifiedName = typeElement.getQualifiedName().toString();
             typeSimpleName = typeElement.getSimpleName().toString();
         }
     }
@@ -45,8 +45,11 @@ public class AnnotatedClass {
         return typeSimpleName;
     }
 
-    public String getTypeFullName() {
-        return typeFullName;
+    /**
+     * @return @Factory注解中type类的全名
+     */
+    public String getTypeQualifedName() {
+        return typeQualifiedName;
     }
 
     public TypeElement getTypeElement() {
