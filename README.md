@@ -3,7 +3,7 @@ apt全称是annotation process tool是一种处理注解的工具，它对源代
 
 ### AbstractProcessor
 每一个注解处理器都必须继承自AbstractProcessor
-#```
+# ```
 public class TestProcessor extends AbstractProcessor {
 
     @Override
@@ -26,7 +26,7 @@ public class TestProcessor extends AbstractProcessor {
         return super.getSupportedAnnotationTypes();
     }
 }
-#```
+# ```
 每一个注解处理器类都必须提供一个空的构造函数。init方法会被注解处理工具调用，输入ProcessingEnvironment参数。这个参数提供了很多有用的工具类，比如Elements, Types和Filer
 
 Elements： 一个用来处理Element的工具类
