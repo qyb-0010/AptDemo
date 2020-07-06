@@ -204,7 +204,7 @@ public class FactoryProcessor extends AbstractProcessor {
 - Elements
 
 在注解的处理过程中，会扫描java源代码，java源代码的每个部分都是特定的element，具体如下所示：
-```
+``` java
 package com.example;    // PackageElement
 
 public class Foo {      // TypeElement
@@ -222,7 +222,7 @@ public class Foo {      // TypeElement
 }
 ```
 同时，每个element还可以访问到它的父或者子元素上
-```
+``` java
 TypeElement fooClass = ... ;  
 for (Element e : fooClass.getEnclosedElements()){ // iterate over children  
     Element parent = e.getEnclosingElement();  // parent == fooClass
@@ -231,7 +231,7 @@ for (Element e : fooClass.getEnclosedElements()){ // iterate over children
 所以Element代表源代码，TypeElement代表源代码中的类型元素，比如类或者变量。但是TypeElement并不包含类本身的信息，虽然可用通过TypeElement获取类的名字，但是获取不到类的信息，比如他的父类等，这些信息需要通过TypeMirror获取，可用通过element.asType()获取。
 
 ### 搜索@Factory注解
-```
+``` java
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
         Set<? extends Element> factoryElements = roundEnvironment.getElementsAnnotatedWith(Factory.class);
@@ -249,7 +249,7 @@ for (Element e : fooClass.getEnclosedElements()){ // iterate over children
 
 ### 数据模型
 我们将被注解的元素信息存放于一个对象中，以方便后续生成代码。
-```
+``` java
 public class AnnotatedClass {
     private TypeElement annotatedClassElement;
     private String typeFullName;
@@ -299,7 +299,7 @@ Class<?> type = factory.type();获取的是Class类型，意味着这是一个�
 2. 这个类还没有被编译：这种情况是我们尝试编译被@Factory注解的源代码，这种情况下，直接获取Class会抛出MirroredTypeException异常。在这个异常中包含一个TypeMirror，它表示我们未编译的类。因为之前检查了他是否为一个Class类型，所以这儿可用放心的强转成DeclaredType然后读取TypeElement的合法名字。
 
 还需要一个对象，这个对象会将所有拥有相同类型Type的类组合到一起：
-```
+``` java
 public class AnnotatedClassGroup {
     private String quafiedName;
 
@@ -325,7 +325,7 @@ public class AnnotatedClassGroup {
 按照面向对象的思想，其实就是把具有相同type的被注解类收集到一个group中，方便后续生成代码。
 
 继续实现process中代码，接下来是检查被注解的类是否合法:
-```
+``` java
     private boolean isValid(AnnotatedClass clzz) {
         TypeElement typeElement = clzz.getTypeElement();
         //被注解的类必须为public
@@ -373,7 +373,7 @@ public class AnnotatedClassGroup {
     }
 ```
 一旦被注解类的合法性检查成功，就会将这个类加入group中
-```
+``` java
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
         Set<? extends Element> factoryElements = roundEnvironment.getElementsAnnotatedWith(Factory.class);
@@ -410,7 +410,7 @@ public class AnnotatedClassGroup {
 
 ### 代码生成
 完成了group分类之后就可以进行代码的生成了，代码生成可以使用javaPoet库。
-```
+``` java
     public void generateCode(Elements elementUtils, Filer filer) {
         TypeElement superClass = elementUtils.getTypeElement(typeQualifiedName);
         String factoryName = superClass.getSimpleName() + SUFFIX;
@@ -448,7 +448,7 @@ public class AnnotatedClassGroup {
 
 ### 注意事项
 注解处理的过程可能会不止一次，也就是process方法可能会执行多次，原因上生成的代码文件中还可能包含@Factory注解，然后这些注解还是会被FactoryProcessor处理。所以当build项目的时候很可能发生异常：
-```
+``` java
 javax.annotation.processing.FilerException: Attempt to recreate a file for type qyb.cn.myapt.food.FoodFactory
 	at com.sun.tools.javac.processing.JavacFiler.checkNameAndExistence(JavacFiler.java:522)
 	at com.sun.tools.javac.processing.JavacFiler.createSourceOrClassFile(JavacFiler.java:396)
@@ -456,12 +456,12 @@ javax.annotation.processing.FilerException: Attempt to recreate a file for type 
 	at com.squareup.javapoet.JavaFile.writeTo(JavaFile.java:113)
 ```
 这是因为在第二轮process的适合仍然保留着上次的数据，所以可以简单的修复下这个问题，在process的最后加上
-```
+``` java
 map.clear()
 ```
 到此为止，编译下之后 就可以生成需要的代码了。
 有一个需要注意的地方，我们引入autoservice注解，而autoservice注解本身也需要一个注解处理器，所以需要在build.gradle中添加
-```
+``` java
 implementation 'com.google.auto.service:auto-service:1.0-rc2'
 annotationProcessor 'com.google.auto.service:auto-service:1.0-rc2'
 ```
