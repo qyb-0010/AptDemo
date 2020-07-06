@@ -3,7 +3,7 @@ apt全称是annotation process tool是一种处理注解的工具，它对源代
 
 ### AbstractProcessor
 每一个注解处理器都必须继承自AbstractProcessor
-# ```
+``` java
 public class TestProcessor extends AbstractProcessor {
 
     @Override
@@ -26,7 +26,7 @@ public class TestProcessor extends AbstractProcessor {
         return super.getSupportedAnnotationTypes();
     }
 }
-# ```
+```
 每一个注解处理器类都必须提供一个空的构造函数。init方法会被注解处理工具调用，输入ProcessingEnvironment参数。这个参数提供了很多有用的工具类，比如Elements, Types和Filer
 
 Elements： 一个用来处理Element的工具类
@@ -34,27 +34,27 @@ Elements： 一个用来处理Element的工具类
 Types： 一个用来处理TypeMirror的工具类
 
 Filer： 使用filer可以创建文件
-#```
+```
 public synchronized void init(ProcessingEnvironment processingEnvironment)
-#```
+```
 
 process相当于处理器的主函数main()，在这个方法里完成扫描，评估和处理注解代码，以及生成java文件，参数roundEnvironment可以查询出特定注解的被注解元素。
-#```
+```
 public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment)
-#```
+```
 
 这里必须制定此注解处理器是用于处理哪些注解的。返回值为一个set，包含要处理注解的类的全称
-#```
+```
 public Set<String> getSupportedAnnotationTypes()
-#```
+```
 
 指定使用的Java版本
-#```
+```
 public SourceVersion getSupportedSourceVersion()
-#```
+```
 
 在java7中也可以使用注解来代替getSupportedAnnotationTypes()和getSupportedSourceVersion()两个方法
-#```
+```
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 @SupportedAnnotationTypes({"com.example.annotation.Test"})
 public class TestProcessor extends AbstractProcessor {
@@ -69,28 +69,28 @@ public class TestProcessor extends AbstractProcessor {
         return false;
     }
 }
-#```
+```
 ### 注册注解处理器
 如何告诉系统TestProcessor是一个注解处理器呢？在android中需要在main/resources目录下建立META-INF/services目录，在此目录中新建一个名为
-#```
+```
 javax.annotation.processing.Processor
-#```
+```
 的文件, 内容是注解处理器的合法全名列表，每一个元素换行分割，比如：
-#```
+```
 com.example.anno_processor.TestProcessor
 com.example.anno_processor.BindViewProcessor
 com.example.anno_processor.MyProcessor
-#```
+```
 谷歌提供了一种简单的方法，让我们不用去维护这个文件，在processor的类上加入@AutoService(Processor.class)注解
-#```
+```
 @AutoService(Processor.class)
 public class TestProcessor extends AbstractProcessor 
-#```
+```
 
 ### 示例：工厂模式
 下面以一个例子来说明注解处理器是怎么使用的。
 假如麦当劳给顾客提供两种食物汉堡hamburger和炸鸡fried chicken, 以及一种甜点冰淇淋icecream.
-#```
+```
 public interface Food {
     float getPrice();
 }
@@ -115,9 +115,9 @@ public class IceCream implements Food {
         return 5F;
     }
 }
-#```
+```
 为了在麦当劳下单，需要输入食物的名字：
-#```
+```
 public class Mcdonalds {
 
     public Food order(String name) {
@@ -136,20 +136,20 @@ public class Mcdonalds {
         throw new RuntimeException("no such food " + name);
     }
 }
-#```
+```
 Mcdonalds类的缺点显而易见，如果我们增加食物种类，都需要增加一个if分支。如果我们使用注解去自动生成这个类那将会节省很多工作。
 
 我们来定义一个注解 @Factory, 首先新建一个annotation module
-#```
+```
 @Retention(RetentionPolicy.CLASS)//注解只在编译期间保留
 @Target(ElementType.TYPE)//目标是在类上面使用
 public @interface Factory {
     String id();//对象唯一id
     Class<?> type();
 }
-#```
+```
 我的想法是同样的type会放在同一个工厂类中，用唯一表示id做映射。
-#```
+```
 @Factory(id = "hamburger", type = Food.class)
 public class Hamburger implements Food {
     @Override
@@ -165,7 +165,7 @@ public class FriedChicken implements Food {
         return 10F;
     }
 }
-#```
+```
 因为注解并不会被继承，所以并不能把注解写在接口上，而且我的目的是找到被注解的类并创建出一个对象，所以被注解的类需要遵循以下规则：
 1. @Factory只能注解类
 2. 被注解的类不能是抽象类，而且必须有个默认的构造函数
@@ -174,7 +174,7 @@ public class FriedChicken implements Food {
 
 ### Processor
 接下来就开始编写注解处理器了，一般的惯例是单独新建一个module来处理，新建module annotation_processor
-#```
+```
 @AutoService(Processor.class)
 @SupportedAnnotationTypes({"qyb.cn.qyb_anno.Factory"})
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
@@ -199,12 +199,12 @@ public class FactoryProcessor extends AbstractProcessor {
         return false;
     }
 }
-#```
+```
 在init方法中，我们获取一些工具类：
 - Elements
 
 在注解的处理过程中，会扫描java源代码，java源代码的每个部分都是特定的element，具体如下所示：
-#```
+```
 package com.example;    // PackageElement
 
 public class Foo {      // TypeElement
@@ -220,7 +220,7 @@ public class Foo {      // TypeElement
     ) {
     }
 }
-#```
+```
 同时，每个element还可以访问到它的父或者子元素上
 ```
 TypeElement fooClass = ... ;  
