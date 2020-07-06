@@ -34,27 +34,27 @@ Elements： 一个用来处理Element的工具类
 Types： 一个用来处理TypeMirror的工具类
 
 Filer： 使用filer可以创建文件
-```
+``` java
 public synchronized void init(ProcessingEnvironment processingEnvironment)
 ```
 
 process相当于处理器的主函数main()，在这个方法里完成扫描，评估和处理注解代码，以及生成java文件，参数roundEnvironment可以查询出特定注解的被注解元素。
-```
+``` java
 public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment)
 ```
 
 这里必须制定此注解处理器是用于处理哪些注解的。返回值为一个set，包含要处理注解的类的全称
-```
+``` java
 public Set<String> getSupportedAnnotationTypes()
 ```
 
 指定使用的Java版本
-```
+``` java
 public SourceVersion getSupportedSourceVersion()
 ```
 
 在java7中也可以使用注解来代替getSupportedAnnotationTypes()和getSupportedSourceVersion()两个方法
-```
+``` java
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 @SupportedAnnotationTypes({"com.example.annotation.Test"})
 public class TestProcessor extends AbstractProcessor {
@@ -72,7 +72,7 @@ public class TestProcessor extends AbstractProcessor {
 ```
 ### 注册注解处理器
 如何告诉系统TestProcessor是一个注解处理器呢？在android中需要在main/resources目录下建立META-INF/services目录，在此目录中新建一个名为
-```
+``` java
 javax.annotation.processing.Processor
 ```
 的文件, 内容是注解处理器的合法全名列表，每一个元素换行分割，比如：
@@ -82,7 +82,7 @@ com.example.anno_processor.BindViewProcessor
 com.example.anno_processor.MyProcessor
 ```
 谷歌提供了一种简单的方法，让我们不用去维护这个文件，在processor的类上加入@AutoService(Processor.class)注解
-```
+``` java
 @AutoService(Processor.class)
 public class TestProcessor extends AbstractProcessor 
 ```
@@ -90,7 +90,7 @@ public class TestProcessor extends AbstractProcessor
 ### 示例：工厂模式
 下面以一个例子来说明注解处理器是怎么使用的。
 假如麦当劳给顾客提供两种食物汉堡hamburger和炸鸡fried chicken, 以及一种甜点冰淇淋icecream.
-```
+``` java
 public interface Food {
     float getPrice();
 }
@@ -117,7 +117,7 @@ public class IceCream implements Food {
 }
 ```
 为了在麦当劳下单，需要输入食物的名字：
-```
+``` java
 public class Mcdonalds {
 
     public Food order(String name) {
@@ -140,7 +140,7 @@ public class Mcdonalds {
 Mcdonalds类的缺点显而易见，如果我们增加食物种类，都需要增加一个if分支。如果我们使用注解去自动生成这个类那将会节省很多工作。
 
 我们来定义一个注解 @Factory, 首先新建一个annotation module
-```
+``` java
 @Retention(RetentionPolicy.CLASS)//注解只在编译期间保留
 @Target(ElementType.TYPE)//目标是在类上面使用
 public @interface Factory {
@@ -149,7 +149,7 @@ public @interface Factory {
 }
 ```
 我的想法是同样的type会放在同一个工厂类中，用唯一表示id做映射。
-```
+``` java
 @Factory(id = "hamburger", type = Food.class)
 public class Hamburger implements Food {
     @Override
@@ -174,7 +174,7 @@ public class FriedChicken implements Food {
 
 ### Processor
 接下来就开始编写注解处理器了，一般的惯例是单独新建一个module来处理，新建module annotation_processor
-```
+``` java
 @AutoService(Processor.class)
 @SupportedAnnotationTypes({"qyb.cn.qyb_anno.Factory"})
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
