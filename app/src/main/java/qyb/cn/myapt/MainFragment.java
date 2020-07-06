@@ -12,6 +12,8 @@ import androidx.fragment.app.Fragment;
 
 import qyb.cn.myapt.food.Food;
 import qyb.cn.myapt.food.FoodFactory;
+import qyb.cn.myapt.people.People;
+import qyb.cn.myapt.people.PeopleFactory;
 import qyb.cn.qyb_anno.BindView;
 import qyb.cn.view_injector.ViewInjector;
 
@@ -32,6 +34,7 @@ public class MainFragment extends Fragment {
         ViewInjector.inject(this, view);
 
         Food hamburger = new FoodFactory().create("hamburger");
-        tv.setText("inject view ok, with hamburger: " + hamburger.getPrice());
+        People p = new PeopleFactory().create("zhangsan");
+        tv.setText(p.name() + " order a hamburger which price is " + hamburger.getPrice());
     }
 }

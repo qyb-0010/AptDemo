@@ -17,12 +17,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         ViewInjector.inject(this);
-//        TextView tv = findViewById(R.id.test1);
-
         tv.setText("hahahaha");
-
         getSupportFragmentManager().beginTransaction().add(R.id.container, new MainFragment()).commit();
     }
 }
